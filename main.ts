@@ -4,6 +4,7 @@ import {
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import { getWeatherData } from "./api/fetchMeteoApi";
 
 const server = new McpServer({
   name: "My Weather Server",
@@ -17,13 +18,28 @@ server.tool(
   {
     city: z.string().describe("Nombre de la ciudad para obtener el clima"),
   },
-  async ({ city }) => { // Implementación de la herramienta
+  async ({ city }) => {
+    // Implementación de la herramienta
+
+    const data = await getWeatherData(city);
+
+    if (!data) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `No se encontraron resultados para la ciudad ${city}`,
+          },
+        ],
+      };
+    }
+
     return {
       content: [
         {
-            type: "text",
-            text: `El clima actual en ${city} es nevado`,
-        }
+          type: "text",
+          text: JSON.stringify(data, null, 2),
+        },
       ],
     };
   }
